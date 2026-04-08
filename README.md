@@ -2,7 +2,7 @@
 
 
 ## INTEGRANTES: 
-1. Zair Montoya Bello - 202320167
-2. Santiago Seade - 202321372
+1. Zair Samuel Montoya Bello - 202320167
+2. Santiago Seade Rachadell - 202321372
 3. Matia Riccardi - 202321259
-4. Sofia Arias - 202310260
+4. Sofia Arias Zuluaga- 202310260
