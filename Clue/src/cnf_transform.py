@@ -5,7 +5,7 @@ El pipeline completo to_cnf() llama a todas las transformaciones en orden.
 
 from __future__ import annotations
 
-from src.logic_core import And, Atom, Formula, Not, Or
+from src.logic_core import And, Atom, Formula, Implies, Iff, Not, Or
 
 
 # --- FUNCION GUÍA SUMINISTRADA COMPLETA ---
@@ -60,7 +60,21 @@ def eliminate_iff(formula: Formula) -> Formula:
           y solo transforma cuando encuentras un Iff.
     """
     # === YOUR CODE HERE ===
-    raise NotImplementedError("Implementa eliminate_iff()")
+    if isinstance(formula, Atom):
+        return formula
+    if isinstance(formula, Not):
+        return Not(eliminate_iff(formula.operand))
+    if isinstance(formula, And):
+        return And(*(eliminate_iff(c) for c in formula.conjuncts))
+    if isinstance(formula, Or):
+        return Or(*(eliminate_iff(d) for d in formula.disjuncts))
+    if isinstance(formula, Iff):
+        a = eliminate_iff(formula.left)
+        b = eliminate_iff(formula.right)
+        return And(Implies(a, b), Implies(b, a))
+    if isinstance(formula, Implies):
+        return Implies(eliminate_iff(formula.antecedent), eliminate_iff(formula.consequent))
+    return formula
     # === END YOUR CODE ===
 
 
@@ -81,7 +95,21 @@ def eliminate_implication(formula: Formula) -> Formula:
           solo los nodos Implies.
     """
     # === YOUR CODE HERE ===
-    raise NotImplementedError("Implementa eliminate_implication()")
+    if isinstance(formula, Atom):
+        return formula
+    if isinstance(formula, Not):
+        return Not(eliminate_implication(formula.operand))
+    if isinstance(formula, And):
+        return And(*(eliminate_implication(c) for c in formula.conjuncts))
+    if isinstance(formula, Or):
+        return Or(*(eliminate_implication(d) for d in formula.disjuncts))
+    if isinstance(formula, Implies):
+        implica = eliminate_implication(formula.antecedent)
+        implicado = eliminate_implication(formula.consequent)
+        return Or(Not(implica), implicado)
+    if isinstance(formula, Iff):
+        return Iff(eliminate_implication(formula.left), eliminate_implication(formula.right))
+    return formula
     # === END YOUR CODE ===
 
 
@@ -111,9 +139,21 @@ def push_negation_inward(formula: Formula) -> Formula:
           asi que no necesitas manejar esos tipos.
     """
     # === YOUR CODE HERE ===
-    raise NotImplementedError("Implementa push_negation_inward()")
+    if isinstance(formula, Atom):
+        return formula
+    if isinstance(formula, Not):
+        operando = push_negation_inward(formula.operand)
+        if isinstance(operando, And):
+            return Or(*(push_negation_inward(Not(c)) for c in operando.conjuncts))
+        if isinstance(operando, Or):
+            return And(*(push_negation_inward(Not(d)) for d in operando.disjuncts))
+        return Not(operando)
+    if isinstance(formula, And):
+        return And(*(push_negation_inward(c) for c in formula.conjuncts))
+    if isinstance(formula, Or):
+        return Or(*(push_negation_inward(d) for d in formula.disjuncts))
+    return formula
     # === END YOUR CODE ===
-
 
 def distribute_or_over_and(formula: Formula) -> Formula:
     """
@@ -138,7 +178,23 @@ def distribute_or_over_and(formula: Formula) -> Formula:
           asi que solo veras Atom, Not(Atom), And y Or.
     """
     # === YOUR CODE HERE ===
-    raise NotImplementedError("Implementa distribute_or_over_and()")
+    if isinstance(formula, Atom):
+        return formula
+    if isinstance(formula, Not):
+        return Not(distribute_or_over_and(formula.operand))
+    if isinstance(formula, And):
+        return And(*(distribute_or_over_and(c) for c in formula.conjuncts))
+    if isinstance(formula, Or):
+        nuevas_disyuns = [distribute_or_over_and(d) for d in formula.disjuncts]
+        and_indices = [i for i, d in enumerate(nuevas_disyuns) if isinstance(d, And)]
+        if not and_indices:
+            return Or(*nuevas_disyuns)
+        and_indice = and_indices[0]
+        and_conjunciones = nuevas_disyuns[and_indice].conjuncts
+        others = [d for i, d in enumerate(nuevas_disyuns) if i != and_indice]
+        nuevas_conyuns = [Or(*others, conj) for conj in and_conjunciones]
+        return distribute_or_over_and(And(*nuevas_conyuns))
+    return formula
     # === END YOUR CODE ===
 
 
@@ -164,9 +220,34 @@ def flatten(formula: Formula) -> Formula:
           Si al final solo queda 1 elemento, retornalo directamente.
     """
     # === YOUR CODE HERE ===
-    raise NotImplementedError("Implementa flatten()")
+    if isinstance(formula, Atom):
+        return formula
+    if isinstance(formula, Not):
+        return Not(flatten(formula.operand))
+    if isinstance(formula, And):
+        nuevas_conyuns = []
+        for c in formula.conjuncts:
+            aplanado = flatten(c)
+            if isinstance(aplanado, And):
+                nuevas_conyuns.extend(aplanado.conjuncts)
+            else:
+                nuevas_conyuns.append(aplanado)
+        if len(nuevas_conyuns) == 1:
+            return nuevas_conyuns[0]
+        return And(*nuevas_conyuns)
+    if isinstance(formula, Or):
+        nuevas_disyuns = []
+        for d in formula.disjuncts:
+            aplanado = flatten(d)
+            if isinstance(aplanado, Or):
+                nuevas_disyuns.extend(aplanado.disjuncts)
+            else:
+                nuevas_disyuns.append(aplanado)
+        if len(nuevas_disyuns) == 1:
+            return nuevas_disyuns[0]
+        return Or(*nuevas_disyuns)
+    return formula
     # === END YOUR CODE ===
-
 
 # --- PIPELINE COMPLETO ---
 
