@@ -39,10 +39,79 @@ def crear_kb() -> KnowledgeBase:
     director_vega  = Term("director_vega")
     syntek_corp    = Term("syntek_corp")
     sala_cultivos  = Term("sala_cultivos")
+    x              = Term("$X")
+    y              = Term("$Y")
+    empresa        = Term("$EMP")
+    lugar          = Term("$L")
 
-    # === YOUR CODE HERE ===
+    kb.add_fact(Predicate("documentacion_oficial_exterior", (dra_santos,)))
+    kb.add_fact(Predicate("registro_oficial_conferencia", (director_vega,)))
+    kb.add_fact(Predicate("sin_coartada_verificada", (tec_rios,)))
+    kb.add_fact(Predicate("sin_coartada_verificada", (asistente_mora,)))
+    kb.add_fact(Predicate("acceso_registrado", (tec_rios, sala_cultivos)))
+    kb.add_fact(Predicate("acceso_registrado", (asistente_mora, sala_cultivos)))
+    kb.add_fact(Predicate("empresa_beneficiada", (syntek_corp,)))
+    kb.add_fact(Predicate("recibio_pagos_de", (tec_rios, syntek_corp)))
+    kb.add_fact(Predicate("acusa", (asistente_mora, tec_rios)))
 
-    # === END YOUR CODE ===
+    kb.add_rule(
+        Rule(
+            head=Predicate("coartada_verificada", (x,)),
+            body=(Predicate("documentacion_oficial_exterior", (x,)),),
+        )
+    )
+    kb.add_rule(
+        Rule(
+            head=Predicate("coartada_verificada", (x,)),
+            body=(Predicate("registro_oficial_conferencia", (x,)),),
+        )
+    )
+    kb.add_rule(
+        Rule(
+            head=Predicate("descartado", (x,)),
+            body=(Predicate("coartada_verificada", (x,)),),
+        )
+    )
+    kb.add_rule(
+        Rule(
+            head=Predicate("conflicto_intereses", (x, empresa)),
+            body=(
+                Predicate("recibio_pagos_de", (x, empresa)),
+                Predicate("empresa_beneficiada", (empresa,)),
+            ),
+        )
+    )
+    kb.add_rule(
+        Rule(
+            head=Predicate("motivo_economico", (x,)),
+            body=(Predicate("conflicto_intereses", (x, empresa)),),
+        )
+    )
+    kb.add_rule(
+        Rule(
+            head=Predicate("acceso_en_momento", (x,)),
+            body=(Predicate("acceso_registrado", (x, lugar)),),
+        )
+    )
+    kb.add_rule(
+        Rule(
+            head=Predicate("culpable", (x,)),
+            body=(
+                Predicate("sin_coartada_verificada", (x,)),
+                Predicate("motivo_economico", (x,)),
+                Predicate("acceso_en_momento", (x,)),
+            ),
+        )
+    )
+    kb.add_rule(
+        Rule(
+            head=Predicate("denuncia_informada", (x, y)),
+            body=(
+                Predicate("acusa", (x, y)),
+                Predicate("acceso_en_momento", (x,)),
+            ),
+        )
+    )
 
     return kb
 
